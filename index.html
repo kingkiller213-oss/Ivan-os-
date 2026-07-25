@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Ivan OS - Music Production Workspace">
+  <meta name="theme-color" content="#0A0B0F">
+  <title>Ivan OS</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="src/styles/main.css">
+  <link rel="stylesheet" href="src/styles/components.css">
+  <link rel="stylesheet" href="src/styles/responsive.css">
+</head>
+<body>
+  <!-- Main App Container -->
+  <div id="app"></div>
+  
+  <!-- Hidden Elements -->
+  <div id="dialogs"></div>
+  
+  <!-- Audio Element -->
+  <audio id="au" preload="metadata"></audio>
+  
+  <!-- File Inputs -->
+  <input type="file" id="filepick" class="hidden" accept=".mp3,.wav,.wave,.aiff,.aif,.aifc,.flac,.ogg,.oga,.opus,.m4a,audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/wave,audio/vnd.wave,audio/aiff,audio/flac,audio/ogg,audio/opus,audio/mp4">
+  <input type="file" id="multipick" class="hidden" multiple accept=".mp3,.wav,.wave,.aiff,.aif,.aifc,.flac,.ogg,.oga,.opus,.m4a,audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/wave,audio/vnd.wave,audio/aiff,audio/flac,audio/ogg,audio/opus,audio/mp4">
+  
+  <!-- App Script -->
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
