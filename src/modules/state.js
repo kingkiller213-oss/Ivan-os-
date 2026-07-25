@@ -1,128 +1,170 @@
 /**
- * State management - persistence and data structure
+ * Central state management with persistence
  */
 
-const K5 = 'ivanos:v5';
-const OLD = ['ivanos:v4', 'ivanos:v3', 'ivanos:v2'];
-const OLDAUDIO = 'ivanos:audio:';
+import * as events from './events.js';
 
-export let state = {
+const STORAGE_KEY = 'ivan-os-state';
+
+let state = {
   songs: [],
-  album: { title: 'Untitled Album', notes: '', tracks: [] },
-  focusId: null,
+  albums: [],
   sessions: [],
-  activity: {},
-  quickNote: '',
-  goals: [],
   gear: [],
-  software: [],
-  wishlist: [],
-  insights: []
+  settings: {
+    theme: 'dark',
+    autoSave: true,
+    notifications: true
+  }
 };
 
-export const files = {}; // versionId -> {url, name, ext, type}
-export const buffers = {}; // versionId -> AudioBuffer
-export const player = { songId: null, verId: null, playing: false, engine: 'element', volume: 1, rate: 1 };
-
-let saveTimeout = null;
-
 /**
- * Load state from storage
+ * Initialize state from storage
  */
-export async function loadState() {
-  for (const key of [K5].concat(OLD)) {
-    try {
-      const r = await window.storage?.get?.(key);
-      if (r && r.value) {
-        const parsed = JSON.parse(r.value);
-        state = migrate(parsed, key);
-        normalize();
-        if (key !== K5) {
-          await cleanupOldAudio();
-          await saveState();
-        }
-        return;
-      }
-    } catch (e) {
-      console.warn(`Failed to load state from ${key}:`, e);
-    }
-  }
-  normalize();
-}
-
-/**
- * Migrate from older versions
- */
-function migrate(d, key) {
-  if (key === K5) return d;
-  const map = { 0: 0, 1: 2, 2: 1, 3: 5, 4: 7, 5: 10 };
-  (d.songs || []).forEach((s) => {
-    s.stage = map[s.stage] !== undefined ? map[s.stage] : 0;
-    (s.audio || []).forEach((v) => {
-      v.status = map[v.status] !== undefined ? map[v.status] : 0;
-    });
-  });
-  return d;
-}
-
-/**
- * Cleanup old audio entries
- */
-async function cleanupOldAudio() {
+export function init() {
   try {
-    const r = await window.storage?.list?.(OLDAUDIO);
-    if (r && r.keys) {
-      for (const k of r.keys) {
-        try {
-          await window.storage.delete(k);
-        } catch (e) {
-          console.warn(`Failed to delete old audio key ${k}:`, e);
-        }
-      }
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      state = JSON.parse(stored);
+      events.emit(events.EVENTS.STATE_CHANGED, state);
     }
-  } catch (e) {
-    console.warn('Failed to cleanup old audio:', e);
+  } catch (error) {
+    console.error('Failed to load state:', error);
   }
 }
 
 /**
- * Persist state to storage
+ * Get entire state
  */
-export async function saveState() {
+export function getState() {
+  return JSON.parse(JSON.stringify(state));
+}
+
+/**
+ * Get state property
+ */
+export function get(path) {
+  const parts = path.split('.');
+  let value = state;
+  for (const part of parts) {
+    if (value === null || value === undefined) return undefined;
+    value = value[part];
+  }
+  return value;
+}
+
+/**
+ * Set state property
+ */
+export function set(path, value) {
+  const parts = path.split('.');
+  const lastPart = parts.pop();
+  let obj = state;
+  
+  for (const part of parts) {
+    if (!(part in obj)) obj[part] = {};
+    obj = obj[part];
+  }
+  
+  obj[lastPart] = value;
+  save();
+  events.emit(events.EVENTS.STATE_CHANGED, state);
+}
+
+/**
+ * Update state object
+ */
+export function update(path, updates) {
+  const current = get(path);
+  const merged = { ...current, ...updates };
+  set(path, merged);
+}
+
+/**
+ * Add item to array
+ */
+export function push(path, item) {
+  const arr = get(path) || [];
+  arr.push(item);
+  set(path, arr);
+  return item;
+}
+
+/**
+ * Remove item from array
+ */
+export function remove(path, predicate) {
+  const arr = get(path) || [];
+  const filtered = arr.filter(item => !predicate(item));
+  set(path, filtered);
+}
+
+/**
+ * Save state to storage
+ */
+export function save() {
   try {
-    await window.storage?.set?.(K5, JSON.stringify(state));
-  } catch (e) {
-    console.error('Failed to save state:', e);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    events.emit(events.EVENTS.STATE_SAVED, state);
+  } catch (error) {
+    console.error('Failed to save state:', error);
+    events.emit(events.EVENTS.ERROR, { message: 'Failed to save data' });
   }
 }
 
 /**
- * Queue a save operation (debounced)
+ * Clear all state
  */
-export function queueSave() {
-  clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(saveState, 400);
+export function clear() {
+  state = {
+    songs: [],
+    albums: [],
+    sessions: [],
+    gear: [],
+    settings: {
+      theme: 'dark',
+      autoSave: true,
+      notifications: true
+    }
+  };
+  save();
 }
 
 /**
- * Normalize state structure
+ * Export state as JSON
  */
-function normalize() {
-  if (!Array.isArray(state.songs)) state.songs = [];
-  if (!state.album) state.album = { title: 'Untitled Album', notes: '', tracks: [] };
-  if (!Array.isArray(state.album.tracks)) state.album.tracks = [];
-  
-  ['sessions', 'goals', 'gear', 'software', 'wishlist', 'insights'].forEach((k) => {
-    if (!Array.isArray(state[k])) state[k] = [];
-  });
-  
-  if (!state.activity || typeof state.activity !== 'object') state.activity = {};
-  if (typeof state.quickNote !== 'string') state.quickNote = '';
+export function exportJSON() {
+  return JSON.stringify(state, null, 2);
 }
 
 /**
- * Initialize app (called after state is loaded)
+ * Import state from JSON
  */
-export function initializeApp() {
-  // Any additional initialization can happen here
+export function importJSON(jsonString) {
+  try {
+    const imported = JSON.parse(jsonString);
+    state = { ...state, ...imported };
+    save();
+    return true;
+  } catch (error) {
+    console.error('Failed to import state:', error);
+    return false;
+  }
+}
+
+/**
+ * Get storage size in bytes
+ */
+export function getStorageSize() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? new Blob([data]).size : 0;
+  } catch {
+    return 0;
+  }
+}
+
+// Auto-save on changes
+export function enableAutoSave(interval = 5000) {
+  setInterval(save, interval);
 }
