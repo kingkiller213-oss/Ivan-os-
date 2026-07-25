@@ -2,22 +2,44 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <meta name="description" content="Ivan OS - Music production operating system for songwriters and producers">
   <meta name="theme-color" content="#0A0B0F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ivan OS">
+  <meta name="mobile-web-app-capable" content="yes">
   
   <title>Ivan OS</title>
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect fill='%230A0B0F' width='180' height='180'/%3E%3Ccircle cx='90' cy='90' r='75' fill='%23C8A45C'/%3E%3Ctext x='90' y='105' font-size='50' font-weight='bold' text-anchor='middle' fill='%230A0B0F' font-family='Arial'%3EIV%3C/text%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23C8A45C'/%3E%3Ctext x='50' y='65' font-size='40' font-weight='bold' text-anchor='middle' fill='%230A0B0F' font-family='Arial'%3EIV%3C/text%3E%3C/svg%3E">
   
   <!-- Styles -->
   <link rel="stylesheet" href="/src/styles/main.css">
   <link rel="stylesheet" href="/src/styles/components.css">
   <link rel="stylesheet" href="/src/styles/responsive.css">
   
-  <!-- Preload fonts -->
-  <link rel="preload" href="https://rsms.me/inter/inter.css" as="style">
-  
-  <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23C8A45C'/%3E%3C/svg%3E">
+  <style>
+    /* Safe area support for notched devices */
+    @supports (padding: max(0px)) {
+      body {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+      }
+      
+      .nav {
+        padding-bottom: env(safe-area-inset-bottom);
+        height: calc(60px + env(safe-area-inset-bottom));
+      }
+      
+      #app {
+        padding-top: env(safe-area-inset-top);
+      }
+    }
+  </style>
 </head>
 <body>
   <main id="app">
@@ -92,5 +114,20 @@
 
   <!-- Scripts -->
   <script type="module" src="/src/app.js"></script>
+  <script>
+    // Register service worker for offline support
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {
+        // Service worker registration failed, app still works online
+      });
+    }
+    
+    // Prevent pull-to-refresh on mobile
+    document.body.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  </script>
 </body>
 </html>
