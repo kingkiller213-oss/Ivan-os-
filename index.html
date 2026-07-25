@@ -1,37 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Ivan OS - Music Production Workspace">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ivan OS - Music production operating system for songwriters and producers">
   <meta name="theme-color" content="#0A0B0F">
+  
   <title>Ivan OS</title>
   
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  
   <!-- Styles -->
-  <link rel="stylesheet" href="src/styles/main.css">
-  <link rel="stylesheet" href="src/styles/components.css">
-  <link rel="stylesheet" href="src/styles/responsive.css">
+  <link rel="stylesheet" href="/src/styles/main.css">
+  <link rel="stylesheet" href="/src/styles/components.css">
+  <link rel="stylesheet" href="/src/styles/responsive.css">
+  
+  <!-- Preload fonts -->
+  <link rel="preload" href="https://rsms.me/inter/inter.css" as="style">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23C8A45C'/%3E%3C/svg%3E">
 </head>
 <body>
-  <!-- Main App Container -->
-  <div id="app"></div>
-  
-  <!-- Hidden Elements -->
-  <div id="dialogs"></div>
-  
-  <!-- Audio Element -->
-  <audio id="au" preload="metadata"></audio>
-  
-  <!-- File Inputs -->
-  <input type="file" id="filepick" class="hidden" accept=".mp3,.wav,.wave,.aiff,.aif,.aifc,.flac,.ogg,.oga,.opus,.m4a,audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/wave,audio/vnd.wave,audio/aiff,audio/flac,audio/ogg,audio/opus,audio/mp4">
-  <input type="file" id="multipick" class="hidden" multiple accept=".mp3,.wav,.wave,.aiff,.aif,.aifc,.flac,.ogg,.oga,.opus,.m4a,audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/wave,audio/vnd.wave,audio/aiff,audio/flac,audio/ogg,audio/opus,audio/mp4">
-  
-  <!-- App Script -->
-  <script type="module" src="src/app.js"></script>
+  <main id="app">
+    <!-- Greeting View -->
+    <div class="view on" data-view="home">
+      <div class="greeting">
+        <div class="label date" id="greeting-date"></div>
+        <h1>Welcome to <em>Ivan OS</em></h1>
+        <div class="streak">
+          Studio streak: <b id="streak-count">0</b> days
+        </div>
+      </div>
+      
+      <section id="quick-stats">
+        <div class="meter">
+          <i style="width: 45%"></i>
+        </div>
+      </section>
+    </div>
+
+    <!-- Songs View -->
+    <div class="view" data-view="songs">
+      <div style="padding: var(--pad);">
+        <h2 class="serif" style="margin: 0 0 24px; font-size: 24px;">Your Songs</h2>
+        <div id="songs-list"></div>
+        <div class="empty" id="songs-empty" style="display: none;">
+          <h2>No songs yet</h2>
+          <p>Create your first song to get started</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Album View -->
+    <div class="view" data-view="album">
+      <div style="padding: var(--pad);">
+        <h2 class="serif" style="margin: 0 0 24px; font-size: 24px;">Album Studio</h2>
+        <div id="album-content"></div>
+      </div>
+    </div>
+
+    <!-- Producer View -->
+    <div class="view" data-view="producer">
+      <div style="padding: var(--pad);">
+        <h2 class="serif" style="margin: 0 0 24px; font-size: 24px;">Producer Tools</h2>
+        <div id="producer-content"></div>
+      </div>
+    </div>
+
+    <!-- Settings View -->
+    <div class="view" data-view="settings">
+      <div style="padding: var(--pad);">
+        <h2 class="serif" style="margin: 0 0 24px; font-size: 24px;">Settings</h2>
+        <div id="settings-content"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <button data-nav="home" aria-current="true">Home</button>
+    <button data-nav="songs">Songs</button>
+    <button data-nav="album">Album</button>
+    <button data-nav="producer">Producer</button>
+    <button data-nav="settings">Settings</button>
+  </nav>
+
+  <!-- FAB -->
+  <button class="fab" id="fab-create" aria-label="Create new song">+</button>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Scripts -->
+  <script type="module" src="/src/app.js"></script>
 </body>
 </html>
