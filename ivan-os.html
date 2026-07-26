@@ -690,7 +690,7 @@ const LIFE = [
 ];
 const LAST_ACTIVE = 10;                 /* Ready to Release = done enough */
 const PRIOS = ["Low","Normal","High"];
-const K5="ivanos:v5", OLD=["ivanos:v4","ivanos:v3","ivanos:v2"], OLDAUDIO="ivanos:audio:";
+const K5="ivanos:v5", OLD=["ivanos:v4","ivanos:v3","ivanos:v2"];
 const STALE=12, DORMANT=30, PEAKS=90;
 
 /* Audio formats. Nothing here is video — Ivan OS accepts audio files only. */
@@ -768,15 +768,17 @@ let actx=null, ses=null, sesTick=null, answer=null;
 async function load(){
   for(const key of [K5].concat(OLD)){
     try{
-      const r = await window.storage.get(key);
-      if(r && r.value){
-        const parsed = JSON.parse(r.value);
+      const raw = localStorage.getItem(key);
+      if(raw){
+        const parsed = JSON.parse(raw);
         state = migrate(parsed, key);
         normalize();
-        if(key !== K5){ await cleanupOldAudio(); await save(); }
+        if(key !== K5){ await save(); }
         return;
       }
-    }catch(e){}
+    }catch(e){
+      console.error("Load failed for", key, e);
+    }
   }
   normalize();
 }
@@ -792,15 +794,12 @@ function migrate(d, key){
   });
   return d;
 }
-async function cleanupOldAudio(){
-  try{
-    const r = await window.storage.list(OLDAUDIO);
-    if(r && r.keys) for(const k of r.keys){ try{ await window.storage.delete(k); }catch(e){} }
-  }catch(e){}
-}
 async function save(){
-  try{ await window.storage.set(K5, JSON.stringify(state)); }
-  catch(e){ toast("Couldn't save — try again"); }
+  try{ localStorage.setItem(K5, JSON.stringify(state)); }
+  catch(e){
+    console.error("Save failed", e);
+    toast("Couldn't save — try again");
+  }
 }
 function queueSave(){ clearTimeout(saveT); saveT=setTimeout(save,400); }
 
@@ -3973,7 +3972,7 @@ document.getElementById("resetBtn").onclick=async function(){
     body:"Every song, lyric, progression, task, note, session and your gear lists are erased. There is no undo for this one.",
     ok:"Erase everything", danger:true });
   if(!ok) return;
-  stopPlayer(); await cleanupOldAudio();
+  stopPlayer();
   state={ songs:[], album:{title:"Untitled Album",notes:"",tracks:[]}, focusId:null,
           sessions:[], activity:{}, quickNote:"", goals:[], gear:[], software:[], wishlist:[], insights:[] };
   normalize(); await save(); renderAll(); toast("Everything cleared");
