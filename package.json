@@ -1,0 +1,33 @@
+{
+  "name": "ivan-os",
+  "version": "2.0.0",
+  "description": "A comprehensive music production OS for songwriters and producers",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "python -m http.server 8000",
+    "lint": "eslint src --ext .js",
+    "format": "prettier --write src/**/*.js"
+  },
+  "keywords": [
+    "music",
+    "production",
+    "songwriter",
+    "studio",
+    "audio",
+    "web-app"
+  ],
+  "author": "kingkiller213",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "eslint": "^8.50.0",
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
