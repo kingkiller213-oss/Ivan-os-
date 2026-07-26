@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ivan OS</title>
+<meta name="description" content="Ivan OS is a mobile-friendly songwriting and music production workspace you can install on your phone.">
+<meta name="theme-color" content="#12141A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ivan OS">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -692,6 +701,47 @@ const LAST_ACTIVE = 10;                 /* Ready to Release = done enough */
 const PRIOS = ["Low","Normal","High"];
 const K5="ivanos:v5", OLD=["ivanos:v4","ivanos:v3","ivanos:v2"], OLDAUDIO="ivanos:audio:";
 const STALE=12, DORMANT=30, PEAKS=90;
+
+if(!window.storage){
+  window.storage=(function(){
+    const mem=new Map();
+    let local=null;
+    try{
+      const probe="ivanos:probe";
+      window.localStorage.setItem(probe,"1");
+      window.localStorage.removeItem(probe);
+      local=window.localStorage;
+    }catch(e){}
+    function has(store,key){
+      return store===local ? store.getItem(key)!==null : store.has(key);
+    }
+    return {
+      async get(key){
+        const store=local||mem;
+        if(!has(store,key)) return null;
+        return { value: local ? store.getItem(key) : store.get(key) };
+      },
+      async set(key,value){
+        if(local) local.setItem(key,String(value));
+        else mem.set(key,String(value));
+        return { ok:true };
+      },
+      async delete(key){
+        if(local) local.removeItem(key);
+        else mem.delete(key);
+        return { ok:true };
+      },
+      async list(prefix){
+        const keys=(local
+          ? Array.from({length:local.length},function(_,i){ return local.key(i); }).filter(Boolean)
+          : Array.from(mem.keys())).filter(function(key){
+          return key.indexOf(prefix)===0;
+        });
+        return { keys:keys };
+      }
+    };
+  })();
+}
 
 /* Audio formats. Nothing here is video — Ivan OS accepts audio files only. */
 const AUDIO_EXT = ["mp3","wav","wave","aiff","aif","aifc","flac","ogg","oga","opus","m4a"];
@@ -3983,7 +4033,15 @@ document.addEventListener("keydown",function(e){
   if(openId) closeSheet();
 });
 
-(async function(){ await load(); renderAll(); renderPlayer(); })();
+(async function(){
+  await load();
+  renderAll();
+  renderPlayer();
+  if("serviceWorker" in navigator){
+    try{ await navigator.serviceWorker.register("/sw.js"); }
+    catch(e){}
+  }
+})();
 </script>
 </body>
 </html>
